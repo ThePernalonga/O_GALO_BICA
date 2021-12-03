@@ -1,5 +1,5 @@
 //  Trabalho 2 PAA
-//  Andre Luiz RA: 2090279
+//  Andre Luiz        RA: 2090279
 //  Everaldo Junior   RA: 1798200
 
 #include <iostream>
@@ -9,15 +9,6 @@
 #include <fstream>
 #include <vector>
 using namespace std;
-
-/*
- * TODO
- * 1. Mudar nome de funções
- * 2. Isolar código
- * 3. Mudar ordem das funções
- *
-*/
-
 
 // Estrutura de armazenamento dos Pontos.
 class Point{
@@ -29,11 +20,7 @@ class Point{
     int parent; // Vértice pai
     float dist; // Menor distancia para o próximo vértice
     bool visited; // Indicador se foi visitado
-    
-    // Override no operador ==
-    bool operator==(const Point &p) {
-        return x == p.x && y == p.y;
-    }
+
 };
 
 // Estrutura de armazenamento das Aresta.
@@ -65,7 +52,7 @@ void makeTreeFile(vector<Edge> edges){
   // Abre e sobrescreve o arquivo
   ofstream file;
   file.open("tree.txt");
-  for (int i = 0; i < edges.size(); i++){
+  for (int i = 0; i < edges.size(); i++){ // O(n)
     // Verifica se a edge não tem loop infinito
     if (edges[i].left.x != edges[i].right.x || edges[i].left.y != edges[i].right.y){
       // Se entrar salva a aresta no arquivo
@@ -104,14 +91,14 @@ vector<Edge> prim(vector<Point> points) {
       // Verifica se já foi visitado e se points[j] está com a menor distância
       if (points[j].visited == false && (min == -1 || points[j].dist < points[min].dist))
         // Se entrar a menor distancia passa a ser points[j]
-        min = j;
+      min = j;
     }
 
     points[min].visited = true;
 
-    // min é o parent dos seguintes pontos
+    // Procura o ponto com menor distância só que min é parent
     for (int j = 0; j < points.size(); j++) { // O(n)
-      // Verifica se o ponto já foi visitado senão verifica se a distância do ponto j é menor que a distância do ponto min
+      // Senão foi visitado a distância recebe j e parent recebe min
       if (points[j].visited == false && (euclidianDistance(points[min], points[j]) < points[j].dist)) {
         points[j].dist = euclidianDistance(points[min], points[j]);
         points[j].parent = min;
@@ -119,7 +106,7 @@ vector<Edge> prim(vector<Point> points) {
     }
   }
 
-	// Adiciona as arestas ao vetor de edges
+	// Adiciona as arestas
   for (int i = 0; i < points.size(); i++) { // O(n)
     if (points[i].parent != -1) {
       Edge currentEdge;
@@ -130,24 +117,24 @@ vector<Edge> prim(vector<Point> points) {
     }
   }
 
-  // Inverte as arestas para que o grafo seja direcionado
+  // Inverte as arestas para a direção do grafo
   reverse(edges.begin(), edges.end());
 
   return edges;
 }
 
 
-// calcula o peso do ciclo.
+// Calcula o peso do ciclo.
 float getCycleWeight(vector<Point> cycle){
-    float weight = 0;
+  float weight = 0.0;
 
-    // Percorre o vetor de pontos do ciclo e calcula o peso de cada aresta
-    for (int i = 0; i < cycle.size() - 1; i++){
-        weight = weight + euclidianDistance(cycle[i], cycle[i + 1]);
-    }
+  // Percorre o vetor de pontos do ciclo e soma com o peso de cada aresta
+  for (int i = 0; i < cycle.size() - 1; i++){ // O(n)
+    weight = weight + euclidianDistance(cycle[i], cycle[i + 1]);
+  }
 
-    // Retorna o valor de peso do ciclo (soma dos pesos das arestas)
-    return weight * 100;
+  // Retorna o valor total do peso do ciclo
+  return weight * 100;
 }
 
 
@@ -155,7 +142,7 @@ float getCycleWeight(vector<Point> cycle){
 vector<Point> dfs(vector<Edge> edges, Point start) {
   vector<Point> stack; // pilha de pontos para realizar a BP
   vector<Point> cycle; // ciclo a ser retornado ao final do algoritmo
-  vector<Point> visited; // pontos que foram visitados pelo algoritmo
+  vector<Point> visitedStack; // pontos que foram visitados pelo algoritmo
     
   // Adiciona o primeiro ponto na pilha
   stack.push_back(start);
@@ -168,14 +155,13 @@ vector<Point> dfs(vector<Edge> edges, Point start) {
     stack.pop_back();
 
     // Veinta se o ponto procurado (retirado da pilha) já foi visitado
-    if (find(visited.begin(), visited.end(), p) == visited.end()){
+    vector<Point>::iterator it;
+    it = find(visitedStack.begin(), visitedStack.end(), p);
+    if (it == visitedStack.end()){
 
       // Adiciona o ponto ao vetor de visitados
-      visited.push_back(p);
+      visitedStack.push_back(p);
 
-      // Adiciona os vizinhos do ponto ao vetor de pilha
-
-      // x == p.x && y == p.y
       // Adiciona os vizinhos do ponto ao vetor de pilha
       for (int i = 0; i < edges.size(); i++){
         Edge currentEdge = edges[i];
@@ -191,8 +177,8 @@ vector<Point> dfs(vector<Edge> edges, Point start) {
   }
 
   // Insere os pontos visitados no vetor do ciclo
-  for (int i = 0; i < visited.size(); i++){
-    cycle.push_back(visited[i]);
+  for (int i = 0; i < visitedStack.size(); i++){
+    cycle.push_back(visitedStack[i]);
   }
 
   // Insere o primeiro ponto no vetor do ciclo (para fechar o ciclo)
@@ -231,7 +217,7 @@ int main(int argc, char *argv[]){
     makeTreeFile(edges);
     
     // Ordena as arestas pelo peso
-    sort(edges.begin(), edges.end(), [](Edge e1, Edge e2) { return e1.weight < e2.weight; });
+    sort(edges.begin(), edges.end(), [](Edge a, Edge b) { return a.weight < b.weight; });
 
 	vector<Point> cycle = dfs(edges, points[0]);
     makeCycleFile(cycle);
